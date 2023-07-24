@@ -1,41 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Markup;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.TextFormatting;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using static System.Net.Mime.MediaTypeNames;
 
-namespace WpfApp1
+namespace SpeedRead
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+
         public MainWindow()
+
         {
             InitializeComponent();
         }
 
         public string Text; // глобальная переменная текста который пользователь ввёл
         public int Delay; //глобальная переменная задержки
+        private static bool isPaused = false;
+
 
         public async void Button_Click(object sender, RoutedEventArgs e) //кнопка "начать" обработчик её действия
         {
-            Text = Clipboard.GetText(); // пробуем вытащить текст напрямую из буфера обмена
+            Text = Clipboard.GetText(); // пробуем вытащить текст напрямую из буфера обмена, пока что как-то так
+            
+
             await OutBegin();
         }
 
@@ -43,14 +33,56 @@ namespace WpfApp1
         {
             string[] words = Text.Split(' '); // без ножа режем текстовую пееменную на массив от куда удаляем все пробелы
 
-            foreach (string word in words) // цикл для вывода всего этого говна
+            if (string.IsNullOrEmpty(Text)) // условие при котром будет выполнение программы
             {
-                textRun.Text = word;
-                await Task.Delay(100);
+                textRun.Text = "ERROR: скопируйте текст в буфер обмена, чтобы начать";
+            }
+            else // вывод ошибки если текста в буфере обмена нету
+            {
+                foreach (string word in words) // цикл для вывода всего этого говна 
+                {
+
+                    if (isPaused) // глупая реализация паузы
+                    {
+                        await Task.Delay(1000);
+
+                    }
+                    else
+                    {
+                        Delay = 60000/(int)ValeuDelay.Value; //математический расчёт слов в минуту
+                        textRun.Text = word;  //поочерёдно закидываем весь текс в окошечко 
+                        await Task.Delay(Delay); // просто задержка
+                    }
+
+                }
             }
         }
 
-        
+
+        private void Button_Click_Paus(object sender, RoutedEventArgs e) //пауза реализация))
+        {
+
+            if (isPaused)
+            {
+                ResumeExecution();
+            }
+            else
+            {
+                PauseExecution();
+            }
+
+        }
+
+        public static void PauseExecution()
+        {
+            isPaused = true; // Устанавливаем флаг паузы
+
+        }
+
+        public static void ResumeExecution()
+        {
+            isPaused = false; // Сбрасываем флаг паузы
+        }
     }
 }
 
